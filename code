@@ -1,0 +1,168 @@
+import warnings
+warnings.filterwarnings('ignore')
+
+import numpy as np
+import pandas as pd
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+import plotly.express as px
+
+df1=pd.read_csv("C:/Users/ASUS/Documents/prevalence-by-mental-and-substance-use-disorder _AI.csv")
+df2=pd.read_csv("C:/Users/ASUS/Documents/mental-and-substance-use-as-share-of-disease -AI.csv")
+
+data=pd.merge(df1,df2)
+
+data.isnull().sum()
+data.drop('Code',axis=1,inplace=True)
+
+data.set_axis(['Country','Year','Schizophrenia','Bipolar_Disorder','Eating_Disorder','Anxiety','Drug_Usage','Depression','Alcohol_Consumption','Mental_Fitness'],axis="columns",inplace=True)
+
+"""plt.figure(figsize=(12,6))
+sns.heatmap(data.corr(),annot=True,cmap='Blues')
+plt.plot()"""
+
+"""sns.pairplot(data,corner=True)
+plt.show()"""
+
+"""mean=data['Mental_Fitness'].mean()
+mean"""
+
+"""fig=px.pie(data,values='Mental_Fitness',names='Year')
+fig.show()"""
+
+"""fig=px.line(data,x="Year",y="Mental_Fitness",color="Country",markers=True,color_discrete_sequence=['red','blue'],template='plotly_dark')
+fig.show()"""
+
+df=pd.DataFrame(data)
+
+from sklearn.preprocessing import LabelEncoder
+l=LabelEncoder()
+for i in df.columns:
+  if df[i].dtype=='object':
+    df[i]=l.fit_transform(df[i])
+
+X=df.drop('Mental_Fitness',axis=1)
+Y=df['Mental_Fitness']
+
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(X,Y,test_size=.20,random_state=2)
+
+"""print("xtrain: ",xtrain.shape)
+print("xtest: ",xtest.shape)
+print("ytrain: ",ytrain.shape)
+print("ytest: ",ytest.shape)"""
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error,r2_score
+
+"""lr=LinearRegression()
+lr.fit(xtrain,ytrain)
+ytrain_pred=lr.predict(xtrain)
+mse=mean_squared_error(ytrain, ytrain_pred)
+rmse=(np.sqrt(mean_squared_error(ytrain,ytrain_pred)))
+r2=r2_score(ytrain,ytrain_pred)"""
+
+"""print('MSE is {}'.format(mse))
+print('RMSE is {}'.format(rmse))
+print('R2 Score is {}'.format(r2))"""
+
+from sklearn.ensemble import RandomForestRegressor
+rf=RandomForestRegressor()
+rf.fit(xtrain,ytrain)
+ytrain_pred=rf.predict(xtrain)
+mse=mean_squared_error(ytrain,ytrain_pred)
+rmse=(np.sqrt(mean_squared_error(ytrain,ytrain_pred)))
+r2=r2_score(ytrain,ytrain_pred)
+
+print('MSE is {}'.format(mse))
+print('RMSE is {}'.format(rmse))
+print('R2 Score is {}'.format(r2))
+
+"""ytest_pred=lr.predict(xtest)
+mse=mean_squared_error(ytest,ytest_pred)
+rmse=(np.sqrt(mean_squared_error(ytest,ytest_pred)))
+r2=r2_score(ytest,ytest_pred)"""
+
+"""print('MSE is {}'.format(mse))
+print('RMSE is {}'.format(rmse))
+print('R2 Score is {}'.format(r2))"""
+
+ytest_pred=rf.predict(xtest)
+mse=mean_squared_error(ytest,ytest_pred)
+rmse=(np.sqrt(mean_squared_error(ytest,ytest_pred)))
+r2=r2_score(ytest,ytest_pred)
+
+print('MSE is {}'.format(mse))
+print('RMSE is {}'.format(rmse))
+print('R2 Score is {}'.format(r2))
+
+import joblib
+joblib.dump(rf,'Mental_Fitness_Tracker')
+
+from tkinter import *
+def show_entry():
+    p1=float(e1.get())
+    p2=float(e2.get())
+    p3=float(e3.get())
+    p4=float(e4.get())
+    p5=float(e5.get())
+    p6=float(e6.get())
+    p7=float(e7.get())
+    p8=float(e8.get())
+    p9=float(e9.get())
+    
+    model=joblib.load('Mental_Fitness_Tracker')
+    
+    df=pd.DataFrame({
+    'Country':p1,
+    'Year':p2,
+    'Schizophrenia':p3,
+    'Bipolar_Disorder':p4,
+    'Eating_Disorder':p5,
+    'Anxiety':p6,
+    'Drug_Usage':p7,
+    'Depression':p8,
+    'Alcohol_Consumption':p9,
+},index=[0])
+    result=model.predict(df)
+    Label(master,text=result).grid(row=11)   
+    
+master=Tk()
+master.title("Mental Fitness Tracker")
+label=Label(master,text="Mental Fitness Tracker",bg="black",fg="white").grid(row=0,columnspan=2)
+
+Label(master,text="Enter the Country [Default is 0]").grid(row=1)
+Label(master,text="Enter the Year [Ranges from 1990 to 2019]").grid(row=2)
+Label(master,text="Have you felt Schizophrenic? [Ranges from 0 (lowest) to 10 (highest)]").grid(row=3)
+Label(master,text="Have you experienced Bipolar Disorder? [Ranges from 0 (lowest) to 10 (highest)]").grid(row=4)
+Label(master,text="Do you have Eating Disorder? [Ranges from 0 (lowest) to 10 (highest)]").grid(row=5)
+Label(master,text="Do you have Anxiety? [Ranges from 0 (lowest) to 10 (highest)]").grid(row=6)
+Label(master,text="Are you on Drug Usage? [Ranges from 0 (lowest) to 10 (highest)]").grid(row=7)
+Label(master,text="Have you feel Depressed? [Ranges from 0 (lowest) to 10 (highest)]").grid(row=8)
+Label(master,text="Are you on Alcohol? [Ranges from 0 (lowest) to 10 (highest)]").grid(row=9)
+
+e1=Entry(master)
+e2=Entry(master)
+e3=Entry(master)
+e4=Entry(master)
+e5=Entry(master)
+e6=Entry(master)
+e7=Entry(master)
+e8=Entry(master)
+e9=Entry(master)
+
+e1.grid(row=1,column=1)
+e2.grid(row=2,column=1)
+e3.grid(row=3,column=1)
+e4.grid(row=4,column=1)
+e5.grid(row=5,column=1)
+e6.grid(row=6,column=1)
+e7.grid(row=7,column=1)
+e8.grid(row=8,column=1)
+e9.grid(row=9,column=1)
+
+Button(master,text="Predict Mental Fitness",command=show_entry).grid(row=10)
+
+mainloop()
